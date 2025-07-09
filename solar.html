@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Solar & Battery Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('https://i.imgur.com/KHQHaS5.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      max-width: 600px;
+      margin: 60px auto;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    input, select, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #0277bd;
+    }
+
+    h2 {
+      color: #0288d1;
+      text-align: center;
+    }
+
+    #output {
+      margin-top: 20px;
+      background: #f1f8ff;
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 4px solid #0288d1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔆 Solar & Battery Calculator</h2>
+
+    <label>Monthly Consumption (kWh):</label>
+    <input type="number" id="monthlyKwh" placeholder="e.g. 300">
+
+    <label>Sunlight Hours per Day:</label>
+    <input type="number" id="sunHours" placeholder="e.g. 4">
+
+    <label>Solar Panel Size (W):</label>
+    <input type="number" id="panelWatt" placeholder="e.g. 340">
+
+    <label>System Voltage (V):</label>
+    <select id="systemVoltage">
+      <option value="12">12V</option>
+      <option value="24">24V</option>
+      <option value="48" selected>48V</option>
+      <option value="51.2">51.2V</option>
+    </select>
+
+    <label>Battery Rating (Ah):</label>
+    <input type="number" id="batteryAh" placeholder="e.g. 200">
+
+    <label>Depth of Discharge (DOD):</label>
+    <select id="dod">
+      <option value="0.5">50%</option>
+      <option value="0.9">90%</option>
+    </select>
+
+    <label>Battery Efficiency:</label>
+    <select id="efficiency">
+      <option value="0.8">80%</option>
+      <option value="0.9">90%</option>
+    </select>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    function calculate() {
+      const monthlyKwh = parseFloat(document.getElementById('monthlyKwh').value);
+      const sunHours = parseFloat(document.getElementById('sunHours').value);
+      const panelWatt = parseFloat(document.getElementById('panelWatt').value);
+      const systemVoltage = parseFloat(document.getElementById('systemVoltage').value);
+      const batteryAhRating = parseFloat(document.getElementById('batteryAh').value);
+      const dod = parseFloat(document.getElementById('dod').value);
+      const efficiency = parseFloat(document.getElementById('efficiency').value);
+
+      if ([monthlyKwh, sunHours, panelWatt, systemVoltage, batteryAhRating, dod, efficiency].some(isNaN)) {
+        document.getElementById('output').innerText = "⚠️ Please fill all fields with valid numbers.";
+        return;
+      }
+
+      const dailyKwh = monthlyKwh / 30;
+      const dailyWh = dailyKwh * 1000;
+
+      const pvPower = (dailyWh / sunHours) * 1.3;
+      const numPanels = Math.ceil(pvPower / panelWatt);
+      const totalPvPower = numPanels * panelWatt;
+      const totalPvKw = totalPvPower / 1000;
+
+      const batteryAh = dailyWh / (dod * efficiency * systemVoltage);
+      const numStrings = Math.ceil(batteryAh / batteryAhRating);
+
+      document.getElementById('output').innerHTML = `
+        <strong>🔋 Consumption</strong><br>
+        Daily Use: <strong>${dailyKwh.toFixed(2)} kWh</strong> (${dailyWh.toFixed(0)} Wh)<br><br>
+
+        <strong>🔆 Solar</strong><br>
+        Required PV Power (with 30% losses): <strong>${pvPower.toFixed(0)} W</strong><br>
+        Number of ${panelWatt}W Panels: <strong>${numPanels} pcs</strong><br>
+        Total PV System: <strong>${totalPvPower} W</strong> or <strong>${totalPvKw.toFixed(2)} kW</strong><br><br>
+
+        <strong>🔋 Battery Bank</strong><br>
+        Required Battery Capacity: <strong>${batteryAh.toFixed(1)} Ah</strong><br>
+        Number of Strings (using ${batteryAhRating}Ah batteries): <strong>${numStrings}</strong><br>
+        System Voltage: <strong>${systemVoltage}V</strong><br>
+        DOD: <strong>${(dod * 100).toFixed(0)}%</strong>, Efficiency: <strong>${(efficiency * 100).toFixed(0)}%</strong>
+      `;
+    }
+  </script>
+</body>
+</html>
